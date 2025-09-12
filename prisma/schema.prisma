@@ -1,0 +1,46 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Mode {
+  star
+  family
+  sleep
+}
+
+model Voice {
+  id               String   @id @default(uuid())
+  ownerSid         String
+  provider         String
+  providerVoiceId  String
+  displayName      String?
+  consentHash      String?
+  createdAt        DateTime @default(now())
+  revokedAt        DateTime?
+
+  ttsJobs          TTSJob[]
+}
+
+model TTSJob {
+  id                  String   @id @default(uuid())
+  voiceId             String?
+  voice               Voice?   @relation(fields: [voiceId], references: [id])
+  chars               Int
+  mode                Mode
+  costEstimateCents   Int?
+  durationMs          Int?
+  createdAt           DateTime @default(now())
+}
+
+model MagicLink {
+  id         String   @id @default(uuid())
+  sid        String
+  email      String
+  token      String   @unique
+  expiresAt  DateTime
+} 
