@@ -1,34 +1,37 @@
-import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { supabaseAdmin } from "@/lib/supabase";
 
-const endpoint = process.env.S3_ENDPOINT;
-const region = process.env.S3_REGION || "auto";
-const accessKeyId = process.env.S3_ACCESS_KEY_ID;
-const secretAccessKey = process.env.S3_SECRET_ACCESS_KEY;
+export const uploadsBucket = process.env.SUPABASE_UPLOADS_BUCKET || "uploads";
+export const outputsBucket = process.env.SUPABASE_OUTPUTS_BUCKET || "outputs";
 
-export const uploadsBucket = process.env.S3_BUCKET_UPLOADS || "uploads";
-export const outputsBucket = process.env.S3_BUCKET_OUTPUTS || "outputs";
-
-export function createS3() {
-  return new S3Client({
-    region,
-    endpoint,
-    forcePathStyle: true,
-    credentials:
-      accessKeyId && secretAccessKey
-        ? { accessKeyId, secretAccessKey }
-        : undefined,
+export async function uploadToBucket(
+  bucket: string,
+  path: string,
+  file: File | Blob,
+  opts?: { contentType?: string; upsert?: boolean }
+) {
+  const sb = supabaseAdmin();
+  const { error } = await sb.storage.from(bucket).upload(path, file, {
+    contentType: opts?.contentType,
+    upsert: opts?.upsert ?? false,
   });
+  if (error) throw error;
 }
 
 export async function presignDownload(
   bucket: string,
-  key: string,
+  path: string,
   expiresSeconds: number
 ): Promise<{ url: string; expiresAt: string }> {
-  const s3 = createS3();
-  const cmd = new GetObjectCommand({ Bucket: bucket, Key: key });
-  const url = await getSignedUrl(s3, cmd, { expiresIn: expiresSeconds });
-  const expiresAt = new Date(Date.now() + expiresSeconds * 1000).toISOString();
-  return { url, expiresAt };
+  const sb = supabaseAdmin();
+  const { data, error } = await sb.storage
+    .from(bucket)
+    .createSignedUrl(path, expiresSeconds);
+  if (error || !data) throw error || new Error("presign failed");
+  return { url: data.signedUrl, expiresAt: new Date(Date.now() + expiresSeconds * 1000).toISOString() };
+}
+
+export async function removeFromBucket(bucket: string, paths: string[]) {
+  const sb = supabaseAdmin();
+  const { error } = await sb.storage.from(bucket).remove(paths);
+  if (error) throw error;
 } 
