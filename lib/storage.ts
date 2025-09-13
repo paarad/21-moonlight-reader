@@ -3,14 +3,26 @@ import { supabaseAdmin } from "@/lib/supabase";
 export const uploadsBucket = process.env.SUPABASE_UPLOADS_BUCKET || "uploads";
 export const outputsBucket = process.env.SUPABASE_OUTPUTS_BUCKET || "outputs";
 
+function isBlobLike(input: unknown): input is Blob {
+  return !!input && typeof (input as any) === "object" && typeof (input as any)["arrayBuffer"] === "function" && typeof (input as any)["slice"] === "function";
+}
+
+function toBlob(input: Blob | File | ArrayBuffer | ArrayBufferView): Blob {
+  if (isBlobLike(input)) return input as Blob;
+  if (ArrayBuffer.isView(input)) return new Blob([input as ArrayBufferView]);
+  if (input instanceof ArrayBuffer) return new Blob([new Uint8Array(input)]);
+  return new Blob([input as any]);
+}
+
 export async function uploadToBucket(
   bucket: string,
   path: string,
-  file: File | Blob,
+  file: Blob | File | ArrayBuffer | ArrayBufferView,
   opts?: { contentType?: string; upsert?: boolean }
 ) {
   const sb = supabaseAdmin();
-  const { error } = await sb.storage.from(bucket).upload(path, file, {
+  const body = toBlob(file);
+  const { error } = await sb.storage.from(bucket).upload(path, body, {
     contentType: opts?.contentType,
     upsert: opts?.upsert ?? false,
   });
