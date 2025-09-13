@@ -21,7 +21,12 @@ export async function uploadToBucket(
   opts?: { contentType?: string; upsert?: boolean }
 ) {
   const sb = supabaseAdmin();
-  const body = toBlob(file);
+  const blob = toBlob(file);
+  const filename = path.split("/").pop() || "file";
+  let body: Blob | File = blob;
+  if (typeof File !== "undefined" && opts?.contentType) {
+    body = new File([blob], filename, { type: opts.contentType });
+  }
   const { error } = await sb.storage.from(bucket).upload(path, body, {
     contentType: opts?.contentType,
     upsert: opts?.upsert ?? false,
