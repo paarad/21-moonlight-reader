@@ -30,13 +30,13 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}
       >
-        <div className="mx-auto max-w-5xl px-6 py-8">
-          <header className="flex items-center justify-between mb-8">
+        <div className="mx-auto max-w-6xl px-8 py-12">
+          <header className="flex items-center justify-between mb-12">
             <div className="flex items-center gap-3">
-              <Logo className="h-7 w-7" />
-              <Link href="/" className="text-lg font-semibold">Moonlight Reader</Link>
+              <Logo className="h-8 w-8" />
+              <Link href="/" className="text-xl font-semibold">Moonlight Reader</Link>
             </div>
-            <nav className="flex items-center gap-4 text-sm">
+            <nav className="flex items-center gap-6 text-sm">
               <Link href="/tts" className="hover:underline">Generate</Link>
               <Link href="/voices/new" className="hover:underline">Save a voice</Link>
               <Link href="/privacy" className="hover:underline">Privacy</Link>

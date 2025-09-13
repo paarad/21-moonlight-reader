@@ -48,14 +48,16 @@ export default function TTSPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <h1 className="text-2xl font-semibold">Generate a bedtime read</h1>
-      <p className="text-sm text-muted-foreground">
-        Text is processed in-memory only and never stored.
-      </p>
+    <div className="space-y-8 max-w-2xl">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-semibold">Generate a bedtime read</h1>
+        <p className="text-sm text-muted-foreground">
+          Text is processed in-memory only and never stored.
+        </p>
+      </div>
 
-      <div className="grid gap-4">
-        <div className="rounded-xl border border-border p-4 bg-card/60">
+      <div className="grid gap-6">
+        <div className="rounded-xl border border-border p-5 bg-card/60">
           <div className="space-y-2">
             <label className="text-sm">Voice name (optional)</label>
             <input
@@ -66,7 +68,7 @@ export default function TTSPage() {
               placeholder="Grandma, Dad, Star Voice..."
             />
           </div>
-          <div className="space-y-2 mt-4">
+          <div className="space-y-2 mt-5">
             <label className="text-sm">Clips (1–3 minutes)</label>
             <input
               type="file"
@@ -79,20 +81,20 @@ export default function TTSPage() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-border p-4 bg-card/60">
+        <div className="rounded-xl border border-border p-5 bg-card/60">
           <div className="space-y-2">
             <label className="text-sm">Text</label>
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="Paste a chapter or paragraph…"
-              className="w-full min-h-40 rounded-md border border-border bg-background p-3 text-sm"
+              className="w-full min-h-44 rounded-md border border-border bg-background p-3 text-sm"
             />
             <div className="text-xs text-muted-foreground">Max 20k characters per request.</div>
           </div>
         </div>
 
-        <div className="rounded-xl border border-border p-4 bg-card/60">
+        <div className="rounded-xl border border-border p-5 bg-card/60">
           <div className="space-y-2">
             <label className="text-sm">Mode</label>
             <div className="flex gap-2">
@@ -117,20 +119,20 @@ export default function TTSPage() {
         <div className="rounded-md border border-destructive/40 text-destructive text-sm p-3">{error}</div>
       )}
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pt-2">
         <div className="text-sm text-muted-foreground">Estimated cost: —</div>
         <button
           type="button"
           onClick={onGenerate}
           disabled={loading}
-          className="h-10 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground disabled:opacity-50"
+          className="h-11 rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground disabled:opacity-50"
         >
           {loading ? "Generating…" : "Generate"}
         </button>
       </div>
 
       {download && (
-        <div className="space-y-3 rounded-md border border-border p-3">
+        <div className="space-y-3 rounded-md border border-border p-4">
           <audio controls className="w-full" src={download.url} />
           <div className="flex items-center justify-between text-sm">
             <a className="underline" href={download.url} target="_blank" rel="noreferrer">
