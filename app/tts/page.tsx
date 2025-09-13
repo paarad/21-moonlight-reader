@@ -35,7 +35,6 @@ export default function TTSPage() {
       const fd = new FormData();
       fd.set("text", text);
       if (name.trim()) fd.set("name", name.trim());
-      // mode is currently not used by the quick endpoint; kept for future presets
       files.forEach((f) => fd.append("files", f));
       const res = await fetch("/api/quick-tts", { method: "POST", body: fd });
       const json = await res.json();
@@ -55,55 +54,62 @@ export default function TTSPage() {
         Text is processed in-memory only and never stored.
       </p>
 
-      <div className="space-y-2">
-        <label className="text-sm">Voice name (optional)</label>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="w-full h-10 rounded-md border border-border bg-background px-3 text-sm"
-          placeholder="Grandma, Dad, Star Voice..."
-        />
-      </div>
+      <div className="grid gap-4">
+        <div className="rounded-xl border border-border p-4 bg-card/60">
+          <div className="space-y-2">
+            <label className="text-sm">Voice name (optional)</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full h-10 rounded-md border border-border bg-background px-3 text-sm"
+              placeholder="Grandma, Dad, Star Voice..."
+            />
+          </div>
+          <div className="space-y-2 mt-4">
+            <label className="text-sm">Clips (1–3 minutes)</label>
+            <input
+              type="file"
+              accept="audio/*"
+              multiple
+              onChange={(e) => setFiles(Array.from(e.target.files || []))}
+              className="w-full text-sm"
+            />
+            <div className="text-xs text-muted-foreground">We use clips only to create a temporary voice, then revoke it.</div>
+          </div>
+        </div>
 
-      <div className="space-y-2">
-        <label className="text-sm">Clips (1–3 minutes)</label>
-        <input
-          type="file"
-          accept="audio/*"
-          multiple
-          onChange={(e) => setFiles(Array.from(e.target.files || []))}
-          className="w-full text-sm"
-        />
-        <div className="text-xs text-muted-foreground">We use clips only to create a temporary voice, then revoke it.</div>
-      </div>
+        <div className="rounded-xl border border-border p-4 bg-card/60">
+          <div className="space-y-2">
+            <label className="text-sm">Text</label>
+            <textarea
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Paste a chapter or paragraph…"
+              className="w-full min-h-40 rounded-md border border-border bg-background p-3 text-sm"
+            />
+            <div className="text-xs text-muted-foreground">Max 20k characters per request.</div>
+          </div>
+        </div>
 
-      <div className="space-y-2">
-        <label className="text-sm">Text</label>
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Paste a chapter or paragraph…"
-          className="w-full min-h-40 rounded-md border border-border bg-background p-3 text-sm"
-        />
-        <div className="text-xs text-muted-foreground">Max 20k characters per request.</div>
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm">Mode</label>
-        <div className="flex gap-2">
-          {modes.map((m) => (
-            <button
-              key={m.key}
-              type="button"
-              onClick={() => setMode(m.key)}
-              className={`h-9 rounded-md border px-3 text-sm ${
-                mode === m.key ? "bg-primary text-primary-foreground border-transparent" : "border-border hover:bg-accent"
-              }`}
-            >
-              {m.label}
-            </button>
-          ))}
+        <div className="rounded-xl border border-border p-4 bg-card/60">
+          <div className="space-y-2">
+            <label className="text-sm">Mode</label>
+            <div className="flex gap-2">
+              {modes.map((m) => (
+                <button
+                  key={m.key}
+                  type="button"
+                  onClick={() => setMode(m.key)}
+                  className={`h-9 rounded-md border px-3 text-sm ${
+                    mode === m.key ? "bg-primary text-primary-foreground border-transparent" : "border-border hover:bg-accent"
+                  }`}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 

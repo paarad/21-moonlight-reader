@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Link from "next/link";
+import { Logo } from "@/components/Logo";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,11 +33,14 @@ export default function RootLayout({
         <div className="mx-auto max-w-5xl px-6 py-8">
           <header className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
-                <span className="text-primary">☾</span>
-              </div>
-              <span className="text-lg font-semibold">Moonlight Reader</span>
+              <Logo className="h-7 w-7" />
+              <Link href="/" className="text-lg font-semibold">Moonlight Reader</Link>
             </div>
+            <nav className="flex items-center gap-4 text-sm">
+              <Link href="/tts" className="hover:underline">Generate</Link>
+              <Link href="/voices/new" className="hover:underline">Save a voice</Link>
+              <Link href="/privacy" className="hover:underline">Privacy</Link>
+            </nav>
           </header>
           {children}
         </div>
