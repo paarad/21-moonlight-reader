@@ -10,7 +10,7 @@ export async function elCreateVoice(name: string, files: File[]): Promise<{ voic
   const form = new FormData();
   form.set("name", name || "Moonlight Voice");
   for (const f of files) {
-    form.append("files", f, (f as any).name || "clip.wav");
+    form.append("files", f, f.name || "clip.wav");
   }
   const res = await fetch(`${BASE_URL}/v1/voices/add`, {
     method: "POST",
@@ -38,7 +38,16 @@ export async function elSynthesizeToArrayBuffer(
   text: string,
   settings?: ElevenLabsSynthesisSettings
 ): Promise<ArrayBuffer> {
-  const body = {
+  const body: {
+    text: string;
+    model_id: string;
+    optimize_streaming_latency: 0 | 1 | 2 | 3;
+    voice_settings: {
+      stability: number;
+      similarity_boost: number;
+      use_speaker_boost: boolean;
+    };
+  } = {
     text,
     model_id: settings?.modelId || "eleven_multilingual_v2",
     optimize_streaming_latency: settings?.optimizeStreamingLatency ?? 3,
@@ -47,7 +56,7 @@ export async function elSynthesizeToArrayBuffer(
       similarity_boost: settings?.similarityBoost ?? 0.85,
       use_speaker_boost: settings?.useSpeakerBoost ?? true,
     },
-  } as any;
+  };
   const res = await fetch(`${BASE_URL}/v1/text-to-speech/${encodeURIComponent(voiceId)}/stream`, {
     method: "POST",
     headers: {

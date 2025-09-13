@@ -4,14 +4,20 @@ export const uploadsBucket = process.env.SUPABASE_UPLOADS_BUCKET || "uploads";
 export const outputsBucket = process.env.SUPABASE_OUTPUTS_BUCKET || "outputs";
 
 function isBlobLike(input: unknown): input is Blob {
-  return !!input && typeof (input as any) === "object" && typeof (input as any)["arrayBuffer"] === "function" && typeof (input as any)["slice"] === "function";
+  if (typeof input !== "object" || input === null) return false;
+  const obj = input as { arrayBuffer?: unknown; slice?: unknown };
+  return typeof obj.arrayBuffer === "function" && typeof obj.slice === "function";
 }
 
 function toBlob(input: Blob | File | ArrayBuffer | ArrayBufferView): Blob {
   if (isBlobLike(input)) return input as Blob;
-  if (ArrayBuffer.isView(input)) return new Blob([input as ArrayBufferView]);
-  if (input instanceof ArrayBuffer) return new Blob([new Uint8Array(input)]);
-  return new Blob([input as any]);
+  if (ArrayBuffer.isView(input)) {
+    const view = input as ArrayBufferView;
+    const ab = (view.buffer as ArrayBuffer).slice(view.byteOffset, view.byteOffset + view.byteLength) as ArrayBuffer;
+    return new Blob([ab]);
+  }
+  if (input instanceof ArrayBuffer) return new Blob([input as ArrayBuffer]);
+  throw new TypeError("Unsupported input type for toBlob");
 }
 
 export async function uploadToBucket(

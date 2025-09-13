@@ -64,8 +64,9 @@ export async function POST(request: NextRequest) {
     const ttl = parseInt(process.env.OUTPUT_URL_TTL_SECONDS || "3600", 10);
     const { url, expiresAt } = await presignDownload(process.env.SUPABASE_OUTPUTS_BUCKET || outputsBucket, key, ttl);
     return NextResponse.json({ downloadUrl: url, expiresAt });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("/api/quick-tts error", err);
-    return NextResponse.json({ error: "server_error", message: String(err?.message || err) }, { status: 500 });
+    const message = err instanceof Error ? err.message : typeof err === "string" ? err : "unknown error";
+    return NextResponse.json({ error: "server_error", message }, { status: 500 });
   }
 } 

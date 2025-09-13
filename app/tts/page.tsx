@@ -41,8 +41,9 @@ export default function TTSPage() {
       const json = await res.json();
       if (!res.ok) throw new Error(json?.message || json?.error || "Request failed");
       setDownload({ url: json.downloadUrl, expiresAt: json.expiresAt });
-    } catch (e: any) {
-      setError(String(e.message || e));
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      setError(message);
     } finally {
       setLoading(false);
     }

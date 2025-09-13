@@ -18,10 +18,17 @@ function fromUtf8(str: string): Uint8Array {
   return new TextEncoder().encode(str);
 }
 
+function toArrayBuffer(view: Uint8Array): ArrayBuffer {
+  const { buffer, byteOffset, byteLength } = view;
+  if (byteOffset === 0 && byteLength === buffer.byteLength) return buffer as ArrayBuffer;
+  return buffer.slice(byteOffset, byteOffset + byteLength) as ArrayBuffer;
+}
+
 async function importKey(secret: string): Promise<CryptoKey> {
+  const rawAb = toArrayBuffer(fromUtf8(secret));
   return crypto.subtle.importKey(
     "raw",
-    fromUtf8(secret),
+    rawAb,
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign", "verify"]
@@ -30,12 +37,13 @@ async function importKey(secret: string): Promise<CryptoKey> {
 
 export async function generateSid(): Promise<string> {
   const bytes = crypto.getRandomValues(new Uint8Array(16));
-  return toBase64Url(bytes.buffer);
+  return toBase64Url(toArrayBuffer(bytes));
 }
 
 export async function signSid(value: string): Promise<string> {
   const key = await importKey(getSecret());
-  const sig = await crypto.subtle.sign("HMAC", key, fromUtf8(value));
+  const dataAb = toArrayBuffer(fromUtf8(value));
+  const sig = await crypto.subtle.sign("HMAC", key, dataAb);
   return toBase64Url(sig);
 }
 
