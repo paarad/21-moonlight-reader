@@ -13,6 +13,40 @@ type ModeKey = typeof modes[number]["key"];
 export default function TTSPage() {
   const [mode, setMode] = useState<ModeKey>("family");
   const [text, setText] = useState("");
+  const [name, setName] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [download, setDownload] = useState<{ url: string; expiresAt: string } | null>(null);
+
+  async function onGenerate() {
+    setError(null);
+    setDownload(null);
+    if (!text.trim()) {
+      setError("Please enter some text.");
+      return;
+    }
+    if (files.length === 0) {
+      setError("Please upload 1–3 minutes of voice clips.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const fd = new FormData();
+      fd.set("text", text);
+      if (name.trim()) fd.set("name", name.trim());
+      // mode is currently not used by the quick endpoint; kept for future presets
+      files.forEach((f) => fd.append("files", f));
+      const res = await fetch("/api/quick-tts", { method: "POST", body: fd });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || "Request failed");
+      setDownload({ url: json.downloadUrl, expiresAt: json.expiresAt });
+    } catch (e: any) {
+      setError(String(e.message || e));
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -22,11 +56,26 @@ export default function TTSPage() {
       </p>
 
       <div className="space-y-2">
-        <label className="text-sm">Voice</label>
-        <select className="w-full h-10 rounded-md border border-border bg-background px-3 text-sm">
-          <option value="">Select a voice…</option>
-          <option value="voice1">Voice 1</option>
-        </select>
+        <label className="text-sm">Voice name (optional)</label>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="w-full h-10 rounded-md border border-border bg-background px-3 text-sm"
+          placeholder="Grandma, Dad, Star Voice..."
+        />
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm">Clips (1–3 minutes)</label>
+        <input
+          type="file"
+          accept="audio/*"
+          multiple
+          onChange={(e) => setFiles(Array.from(e.target.files || []))}
+          className="w-full text-sm"
+        />
+        <div className="text-xs text-muted-foreground">We use clips only to create a temporary voice, then revoke it.</div>
       </div>
 
       <div className="space-y-2">
@@ -46,6 +95,7 @@ export default function TTSPage() {
           {modes.map((m) => (
             <button
               key={m.key}
+              type="button"
               onClick={() => setMode(m.key)}
               className={`h-9 rounded-md border px-3 text-sm ${
                 mode === m.key ? "bg-primary text-primary-foreground border-transparent" : "border-border hover:bg-accent"
@@ -57,12 +107,33 @@ export default function TTSPage() {
         </div>
       </div>
 
+      {error && (
+        <div className="rounded-md border border-destructive/40 text-destructive text-sm p-3">{error}</div>
+      )}
+
       <div className="flex items-center justify-between">
         <div className="text-sm text-muted-foreground">Estimated cost: —</div>
-        <button className="h-10 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground disabled:opacity-50" disabled>
-          Generate
+        <button
+          type="button"
+          onClick={onGenerate}
+          disabled={loading}
+          className="h-10 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground disabled:opacity-50"
+        >
+          {loading ? "Generating…" : "Generate"}
         </button>
       </div>
+
+      {download && (
+        <div className="space-y-3 rounded-md border border-border p-3">
+          <audio controls className="w-full" src={download.url} />
+          <div className="flex items-center justify-between text-sm">
+            <a className="underline" href={download.url} target="_blank" rel="noreferrer">
+              Download MP3
+            </a>
+            <span className="text-muted-foreground">Expires: {new Date(download.expiresAt).toLocaleString()}</span>
+          </div>
+        </div>
+      )}
 
       <div className="rounded-md border border-border p-3 text-sm text-muted-foreground">
         Download links expire automatically; files are auto-purged.
