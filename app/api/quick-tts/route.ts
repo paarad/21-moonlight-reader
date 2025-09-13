@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { outputsBucket, presignDownload, uploadToBucket } from "@/lib/storage";
-import { elCreateVoice, elSynthesizeToArrayBuffer, elDeleteVoice } from "@/lib/vendors/elevenlabs";
+import { elCreateVoice, elSynthesizeToArrayBuffer, elDeleteVoice, type ElevenLabsSynthesisSettings } from "@/lib/vendors/elevenlabs";
 
 export const runtime = "nodejs";
 
@@ -11,6 +11,19 @@ function requireEnv() {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) missing.push("SUPABASE_SERVICE_ROLE_KEY");
   if (!process.env.SUPABASE_OUTPUTS_BUCKET) missing.push("SUPABASE_OUTPUTS_BUCKET");
   if (missing.length) throw new Error(`Missing env: ${missing.join(", ")}`);
+}
+
+function settingsForMode(mode: string | null): ElevenLabsSynthesisSettings {
+  // Tuned defaults for FR: multilingual model, higher similarity, speaker boost
+  switch (mode) {
+    case "star":
+      return { modelId: "eleven_multilingual_v2", stability: 0.5, similarityBoost: 0.9, useSpeakerBoost: true, optimizeStreamingLatency: 2 };
+    case "sleep":
+      return { modelId: "eleven_multilingual_v2", stability: 0.7, similarityBoost: 0.85, useSpeakerBoost: true, optimizeStreamingLatency: 3 };
+    case "family":
+    default:
+      return { modelId: "eleven_multilingual_v2", stability: 0.6, similarityBoost: 0.88, useSpeakerBoost: true, optimizeStreamingLatency: 3 };
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -31,12 +44,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "files_required", message: "Upload 1–3 minutes of clips" }, { status: 400 });
     }
     const name = String(form.get("name") || "Moonlight Voice").slice(0, 60);
+    const mode = String(form.get("mode") || "family");
 
     // 1) Create temporary voice from clips
     const { voiceId } = await elCreateVoice(name, files);
 
-    // 2) Synthesize to MP3 buffer
-    const audioBuffer = await elSynthesizeToArrayBuffer(voiceId, text, { stability: 0.85 });
+    // 2) Synthesize to MP3 buffer with tuned settings
+    const synthSettings = settingsForMode(mode);
+    const audioBuffer = await elSynthesizeToArrayBuffer(voiceId, text, synthSettings);
 
     // 3) Upload to Supabase outputs
     const key = `mlr/${voiceId}/${Date.now()}.mp3`;

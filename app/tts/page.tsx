@@ -34,11 +34,12 @@ export default function TTSPage() {
     try {
       const fd = new FormData();
       fd.set("text", text);
+      fd.set("mode", mode);
       if (name.trim()) fd.set("name", name.trim());
       files.forEach((f) => fd.append("files", f));
       const res = await fetch("/api/quick-tts", { method: "POST", body: fd });
       const json = await res.json();
-      if (!res.ok) throw new Error(json?.error || "Request failed");
+      if (!res.ok) throw new Error(json?.message || json?.error || "Request failed");
       setDownload({ url: json.downloadUrl, expiresAt: json.expiresAt });
     } catch (e: any) {
       setError(String(e.message || e));

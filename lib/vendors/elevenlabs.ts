@@ -25,15 +25,29 @@ export async function elCreateVoice(name: string, files: File[]): Promise<{ voic
   return { voiceId: json?.voice_id as string };
 }
 
-export async function elSynthesizeToArrayBuffer(voiceId: string, text: string, settings?: { stability?: number; modelId?: string }): Promise<ArrayBuffer> {
+export type ElevenLabsSynthesisSettings = {
+  modelId?: string;
+  stability?: number;
+  similarityBoost?: number;
+  useSpeakerBoost?: boolean;
+  optimizeStreamingLatency?: 0 | 1 | 2 | 3;
+};
+
+export async function elSynthesizeToArrayBuffer(
+  voiceId: string,
+  text: string,
+  settings?: ElevenLabsSynthesisSettings
+): Promise<ArrayBuffer> {
   const body = {
     text,
     model_id: settings?.modelId || "eleven_multilingual_v2",
+    optimize_streaming_latency: settings?.optimizeStreamingLatency ?? 3,
     voice_settings: {
-      stability: settings?.stability ?? 0.8,
-      similarity_boost: 0.75,
+      stability: settings?.stability ?? 0.6,
+      similarity_boost: settings?.similarityBoost ?? 0.85,
+      use_speaker_boost: settings?.useSpeakerBoost ?? true,
     },
-  };
+  } as any;
   const res = await fetch(`${BASE_URL}/v1/text-to-speech/${encodeURIComponent(voiceId)}/stream`, {
     method: "POST",
     headers: {
