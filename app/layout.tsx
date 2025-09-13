@@ -18,6 +18,9 @@ export const metadata: Metadata = {
   title: "Moonlight Reader",
   description:
     "Close your eyes. We’ll read the rest. We store voices, not texts.",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
